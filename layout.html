@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Planner (All-in-One)</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            gap: 30px;
+        }
+
+        .input-section, .output-section {
+            flex: 1;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            color: #38703c;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        textarea, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box; 
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus, input[type="file"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+
+        /* Button Styling */
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.1s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        button:active {
+            transform: scale(0.99);
+        }
+
+        #generate-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #generate-btn:hover {
+            background-color: #45a049;
+        }
+
+        #download-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #download-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #download-btn:not([disabled]):hover {
+            background-color: #0056b3;
+        }
+
+        .plan-content {
+            min-height: 300px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            white-space: pre-wrap; /* Preserve formatting for plan */
+            overflow: auto;
+        }
+
+        .plan-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .plan-content th, .plan-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .plan-content th {
+            background-color: #e8f5e9;
+            color: #38703c;
+        }
+        
+        .placeholder-text {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding-top: 50px;
+        }
+        
+        /* New Loading State Style */
+        .loading-text {
+            color: #4CAF50;
+            font-weight: bold;
+            text-align: center;
+            padding: 50px 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            margin-top: 30px;
+            color: #777;
+            border-top: 1px solid #eee;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                margin: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🧠 AI Study Planner</h1>
+        <p>Input your syllabus (text or image) and get a customized, topic-wise study schedule.</p>
+    </header>
+
+    <main class="container">
+        <section class="input-section">
+            <h2>1. Provide Syllabus Details</h2>
+            
+            <div class="input-group">
+                <label for="text-syllabus">Enter Syllabus Topics (or general goal):</label>
+                <textarea id="text-syllabus" rows="5" placeholder="e.g., 1. Linear Algebra, 2. Calculus (Derivatives & Integrals), 3. Discrete Mathematics..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="image-syllabus">Upload Syllabus Image (AI will read the text):</label>
+                <input type="file" id="image-syllabus" accept="image/*">
+            </div>
+
+            <button id="generate-btn" onclick="generatePlan()">Generate Study Plan</button>
+        </section>
+        
+        <section class="output-section">
+            <h2>2. Your Customized Study Plan</h2>
+            <div id="plan-output" class="plan-content">
+                <p class="placeholder-text">Your generated schedule will appear here. It will detail **What to learn**, **How to learn**, and the **Daily/Weekly schedule**.</p>
+            </div>
+            
+            <button id="download-btn" onclick="downloadPDF()" disabled>Download as PDF ⬇️</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 AI Study Planner Prototype | Frontend Structure Only</p>
+    </footer>
+
+    <script>
+        // Placeholder for the actual AI plan content
+        let currentPlanText = '';
+
+        // Function to handle the plan generation request
+        async function generatePlan() {
+            const textSyllabus = document.getElementById('text-syllabus').value;
+            const imageFile = document.getElementById('image-syllabus').files[0];
+            const outputDiv = document.getElementById('plan-output');
+            const downloadBtn = document.getElementById('download-btn');
+
+            // 1. Validate inputs
+            if (!textSyllabus && !imageFile) {
+                alert("Please enter syllabus text or upload a syllabus image.");
+                return;
+            }
+
+            // 2. Reset output and disable download
+            outputDiv.innerHTML = '<p class="loading-text">Processing... Please wait ⏳<br>Analyzing syllabus and optimizing schedule...</p>';
+            downloadBtn.disabled = true;
+
+            // --- REAL-WORLD INTEGRATION POINT ---
+            // In a real application, you would create a FormData object 
+            // and use the 'fetch' API to send it to your backend AI endpoint.
+            // --- END INTEGRATION POINT ---
+
+
+            // --- MOCK DATA FOR DEMONSTRATION (THIS BLOCK IS NOW ACTIVE) ---
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate AI processing delay
+
+            const mockPlan = `
+**🎯 AI Generated Study Plan: Master Math Fundamentals (7 Days)**
+
+### Topic Breakdown & Methodology
+* **Goal:** Achieve proficiency in foundational Linear Algebra, Calculus, and Discrete Math.
+* **Strategy:** Utilize spaced repetition and active recall. Focus on practice problems over passive reading.
+
+### Weekly Schedule
+
+<table>
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Topic to Learn (What)</th>
+            <th>Methodology (How to Learn)</th>
+            <th>Time Estimate</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>**Mon**</td>
+            <td>Linear Algebra: Vectors & Matrices (Basics)</td>
+            <td>Watch introductory YouTube series (30 min). Solve 15 problems on Vector Addition/Scalar Multiplication.</td>
+            <td>2 hours</td>
+        </tr>
+        <tr>
+            <td>**Tue**</td>
+            <td>Calculus: Derivatives (Power Rule, Product Rule)</td>
+            <td>Read textbook sections 2.1-2.3. Create a cheat sheet of derivative rules. Practice 10 complex derivatives.</td>
+            <td>2 hours</td>
+        </tr>
+        <tr>
+            <td>**Wed**</td>
+            <td>Discrete Math: Set Theory & Logic</td>
+            <td>Review key definitions (Union, Intersection, Implication). Work through practice proofs/Venn Diagrams.</td>
+            <td>1.5 hours</td>
+        </tr>
+        <tr>
+            <td>**Thu**</td>
+            <td>**Review Day**</td>
+            <td>Re-attempt 5 difficult problems from Mon/Tue/Wed. Focus on areas where errors occurred.</td>
+            <td>1 hour</td>
+        </tr>
+        <tr>
+            <td>**Fri**</td>
+            <td>Linear Algebra: Solving Systems of Equations</td>
+            <td>Study Gaussian Elimination. Work through 3 large example problems step-by-step.</td>
+            <td>2.5 hours</td>
+        </tr>
+        <tr>
+            <td>**Sat**</td>
+            <td>Calculus: Basic Integrals & Area Under Curve</td>
+            <td>Watch video lectures on Antiderivatives. Solve 10 definite integral problems.</td>
+            <td>2 hours</td>
+        </tr>
+        <tr>
+            <td>**Sun**</td>
+            <td>**Rest & Light Review**</td>
+            <td>30 mins of light reading on next week's topic or reviewing flashcards created during the week.</td>
+            <td>0.5 hours</td>
+        </tr>
+    </tbody>
+</table>
+
+***
+`;
+            // Save the plan text (for PDF function) and update the output
+            currentPlanText = mockPlan;
+            outputDiv.innerHTML = mockPlan;
+            downloadBtn.disabled = false;
+            // --- END MOCK DATA ---
+
+        }
+
+        // Function to handle PDF Download
+        function downloadPDF() {
+            if (!currentPlanText || document.getElementById('download-btn').disabled) {
+                alert("Please generate a study plan first!");
+                return;
+            }
+
+            // --- REAL-WORLD INTEGRATION POINT ---
+            // The best way is to send the 'currentPlanText' to a backend endpoint 
+            // that uses a library like FPDF or ReportLab to generate a clean PDF
+            // and sends the file back to the browser.
+            // --- END INTEGRATION POINT ---
+
+            // --- Simple Alert for Frontend Prototype ---
+            alert("PDF generation requested! In a real application, a backend service is needed to properly format and create the PDF file.");
+        }
+    </script>
+</body>
+</html>
